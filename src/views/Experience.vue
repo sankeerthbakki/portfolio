@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 const activeTab = ref('work')
 
@@ -100,11 +100,22 @@ const certifications = [
   },
   // Add more certifications
 ]
+
+const tabTransition = computed(() => {
+  return activeTab.value === 'certifications' ? 'zoom' : 'slide'
+})
+
+const onBeforeEnter = (el) => {
+  el.style.setProperty('--delay', `${el.dataset.index * 0.1}s`)
+}
 </script>
 
 <template>
   <div class="content-container">
-    <h1 class="section-title">Experience</h1>
+    <h1 class="section-title">
+      <!-- <span class="title-decorator"></span> -->
+      Experience
+    </h1>
     
     <!-- Tabs -->
     <div class="tabs">
@@ -115,151 +126,206 @@ const certifications = [
         :class="['tab-btn', { active: activeTab === tab.id }]"
       >
         {{ tab.label }}
+        <span class="tab-indicator"></span>
       </button>
     </div>
 
-    <!-- Work Experience -->
-    <div v-if="activeTab === 'work'" class="tab-content">
-      <div 
-        v-for="job in workExperience" 
-        :key="job.id"
-        class="experience-card"
-        data-aos="fade-up"
-      >
-        <div class="card-header">
-          <h3>{{ job.role }}</h3>
-          <p class="company">{{ job.company }}</p>
-          <p class="period">{{ job.period }} | {{ job.location }}</p>
-        </div>
-        <ul class="description-list">
-          <li v-for="(item, index) in job.description" :key="index">
-            {{ item }}
-          </li>
-        </ul>
-        <div class="tech-stack">
-          <span 
-            v-for="tech in job.technologies" 
-            :key="tech" 
-            class="tech-tag"
-          >
-            {{ tech }}
-          </span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Education -->
-    <div v-if="activeTab === 'education'" class="tab-content">
-      <div 
-        v-for="edu in education" 
-        :key="edu.id"
-        class="experience-card"
-        data-aos="fade-up"
-      >
-        <div class="card-header">
-          <h3>{{ edu.degree }}</h3>
-          <p class="company">{{ edu.institution }}</p>
-          <p class="period">{{ edu.period }} | {{ edu.location }}</p>
-        </div>
-        <ul class="description-list">
-          <li v-for="(achievement, index) in edu.achievements" :key="index">
-            {{ achievement }}
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Certifications -->
-    <div v-if="activeTab === 'certifications'" class="tab-content">
-      <div class="certifications-grid">
-        <div 
-          v-for="cert in certifications" 
-          :key="cert.id"
-          class="certification-card"
-          data-aos="fade-up"
+    <!-- Main Content Transition -->
+    <Transition :name="tabTransition" mode="out-in">
+      <!-- Work Experience Tab -->
+      <div v-if="activeTab === 'work'" key="work" class="tab-content">
+        <TransitionGroup 
+          name="staggered-list" 
+          tag="div"
+          @before-enter="onBeforeEnter"
         >
-          <img :src="cert.badgeImage" :alt="cert.name" class="certification-badge">
-          <div class="certification-details">
-            <h3>{{ cert.name }}</h3>
-            <p class="issuer">{{ cert.issuer }}</p>
-            <p class="issue-date">Issued {{ cert.date }}</p>
-            <a :href="cert.url" target="_blank" class="verify-btn">
-              Verify Certificate
-              <span class="arrow">→</span>
-            </a>
+          <div 
+            v-for="(job, index) in workExperience" 
+            :key="job.id"
+            class="experience-card"
+            :data-index="index"
+          >
+            <div class="card-header">
+              <h3>{{ job.role }}</h3>
+              <p class="company">{{ job.company }}</p>
+              <p class="period">{{ job.period }} | {{ job.location }}</p>
+            </div>
+            <ul class="description-list">
+              <li v-for="(item, i) in job.description" :key="i">
+                {{ item }}
+              </li>
+            </ul>
+            <div class="tech-stack">
+              <span 
+                v-for="tech in job.technologies" 
+                :key="tech" 
+                class="tech-tag"
+              >
+                {{ tech }}
+              </span>
+            </div>
           </div>
+        </TransitionGroup>
+      </div>
+
+      <!-- Education Tab -->
+      <div v-else-if="activeTab === 'education'" key="education" class="tab-content">
+        <TransitionGroup 
+          name="staggered-list" 
+          tag="div"
+          @before-enter="onBeforeEnter"
+        >
+          <div 
+            v-for="(edu, index) in education" 
+            :key="edu.id"
+            class="experience-card"
+            :data-index="index"
+          >
+            <div class="card-header">
+              <h3>{{ edu.degree }}</h3>
+              <p class="company">{{ edu.institution }}</p>
+              <p class="period">{{ edu.period }} | {{ edu.location }}</p>
+            </div>
+            <ul class="description-list">
+              <li v-for="(achievement, i) in edu.achievements" :key="i">
+                {{ achievement }}
+              </li>
+            </ul>
+          </div>
+        </TransitionGroup>
+      </div>
+
+      <!-- Certifications Tab -->
+      <div v-else key="certifications" class="tab-content">
+    <TransitionGroup 
+      name="certification-grid" 
+      tag="div" 
+      class="certifications-grid"
+    >
+      <div 
+        v-for="cert in certifications" 
+        :key="cert.id"
+        class="certification-card"
+      >
+        <div class="certification-badge-wrapper">
+          <img 
+            :src="cert.badgeImage" 
+            :alt="cert.name" 
+            class="certification-badge"
+          >
+          <div class="shine-effect"></div>
+        </div>
+        <div class="certification-details">
+          <h3>{{ cert.name }}</h3>
+          <div class="cert-meta">
+            <span class="issuer">{{ cert.issuer }}</span>
+            <span class="separator">•</span>
+            <span class="issue-date">{{ cert.date }}</span>
+          </div>
+          <a :href="cert.url" target="_blank" class="verify-btn">
+            <span class="btn-text">View Credential</span>
+            <svg class="arrow-icon" viewBox="0 0 24 24" fill="none">
+              <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor" stroke-width="2"/>
+            </svg>
+          </a>
         </div>
       </div>
-    </div>
+    </TransitionGroup>
+  </div>
+    </Transition>
   </div>
 </template>
 
 <style scoped>
+/* Base Styles */
+/* .content-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem;
+} */
+
 .section-title {
+  position: relative;
   font-size: 2.5rem;
   color: var(--text-color);
   margin-bottom: 2rem;
   text-align: center;
 }
 
+.title-decorator {
+  display: block;
+  width: 60px;
+  height: 4px;
+  background: var(--primary-color);
+  margin: 0 auto 1rem;
+  border-radius: 2px;
+  animation: decorator-glow 2s ease-in-out infinite;
+}
+
+/* Tabs */
 .tabs {
+  position: relative;
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
 }
 
 .tab-btn {
-  padding: 0.75rem 1.5rem;
+  position: relative;
+  padding: 1rem 2rem;
   border: none;
-  border-radius: var(--border-radius-md);
-  background: rgba(30, 41, 59, 0.7);
+  background: transparent;
   color: var(--text-color);
+  font-weight: 500;
+  font-size: 1.1rem;
   cursor: pointer;
-  transition: all var(--transition-speed);
+  transition: all 0.3s ease;
+}
+
+.tab-indicator {
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: var(--primary-color);
+  transition: all 0.3s ease;
+}
+
+.tab-btn.active .tab-indicator {
+  width: 100%;
 }
 
 .tab-btn:hover {
-  background: rgba(59, 130, 246, 0.2);
+  transform: translateY(-3px);
 }
 
-.tab-btn.active {
-  background: var(--primary-color);
-  color: white;
-}
-
-.tab-content {
-  display: flex;
-  flex-direction: column;
-  gap: 2rem;
-}
-
+/* Experience Cards */
 .experience-card {
-  background: rgba(30, 41, 59, 0.7);
+  background: linear-gradient(145deg, rgba(30, 41, 59, 0.8), rgba(15, 23, 42, 0.8));
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--border-radius-lg);
   padding: 2rem;
-  transition: transform var(--transition-speed);
+  margin-bottom: 1.5rem;
+  position: relative;
+  transition: all 0.3s ease;
+  /* backdrop-filter: blur(10px); */
 }
 
 .experience-card:hover {
-  transform: translateY(-5px);
-}
-
-.card-header {
-  margin-bottom: 1.5rem;
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .card-header h3 {
   font-size: 1.5rem;
-  color: var(--text-color);
   margin-bottom: 0.5rem;
 }
 
 .company {
   color: var(--primary-color);
   font-size: 1.1rem;
-  margin-bottom: 0.25rem;
 }
 
 .period {
@@ -267,17 +333,11 @@ const certifications = [
   font-size: 0.9rem;
 }
 
-.description-list {
-  list-style-type: none;
-  padding: 0;
-  margin-bottom: 1.5rem;
-}
-
 .description-list li {
-  color: #e2e8f0;
-  margin-bottom: 0.5rem;
-  padding-left: 1.5rem;
   position: relative;
+  padding-left: 1.5rem;
+  margin-bottom: 0.5rem;
+  list-style-type: none;
 }
 
 .description-list li::before {
@@ -291,99 +351,229 @@ const certifications = [
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
+  margin-top: 1rem;
 }
 
 .tech-tag {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-  padding: 0.25rem 0.75rem;
-  border-radius: 9999px;
-  font-size: 0.875rem;
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+  padding: 0.5rem 1rem;
+  border-radius: 50px;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
 }
 
+.tech-tag:hover {
+  transform: scale(1.05);
+  background: rgba(59, 130, 246, 0.3);
+}
+
+/* Certifications Grid */
 .certifications-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 2rem;
   width: 100%;
 }
 
+/* Certification Card */
 .certification-card {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  text-align: center;
-  background: rgba(30, 41, 59, 0.7);
+  gap: 2rem;
+  background: linear-gradient(
+    145deg, 
+    rgba(30, 41, 59, 0.8), 
+    rgba(15, 23, 42, 0.9)
+  );
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--border-radius-lg);
   padding: 2rem;
-  transition: all var(--transition-speed);
+  width: 100%;
+  max-width: 800px;
+  position: relative;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
 }
 
 .certification-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+/* Badge Wrapper */
+.certification-badge-wrapper {
+  position: relative;
+  flex-shrink: 0;
+  width: 150px;
+  height: 150px;
 }
 
 .certification-badge {
-  width: 180px;
-  height: 180px;
-  object-fit: contain;
-  margin-bottom: 1.5rem;
-  transition: transform var(--transition-speed);
-}
-
-.certification-card:hover .certification-badge {
-  transform: scale(1.05);
-}
-
-.certification-details {
   width: 100%;
+  height: 100%;
+  object-fit: contain;
+  position: relative;
+  z-index: 1;
+}
+
+.shine-effect {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    45deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.certification-card:hover .shine-effect {
+  opacity: 1;
+}
+
+/* Certification Details */
+.certification-details {
+  flex: 1;
 }
 
 .certification-details h3 {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   color: var(--text-color);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
 }
 
-.issuer {
-  color: var(--primary-color);
-  font-size: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.issue-date {
+.cert-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
   color: #94a3b8;
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
+  font-size: 0.95rem;
 }
 
+.separator {
+  opacity: 0.6;
+}
+
+/* Verify Button */
 .verify-btn {
   display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   color: var(--primary-color);
   background: rgba(59, 130, 246, 0.1);
-  text-decoration: none;
-  font-weight: 500;
-  padding: 0.5rem 1rem;
+  padding: 0.75rem 1.5rem;
   border-radius: var(--border-radius-md);
-  transition: all var(--transition-speed);
+  text-decoration: none;
+  transition: all 0.3s ease;
 }
 
 .verify-btn:hover {
   background: rgba(59, 130, 246, 0.2);
-  color: var(--secondary-color);
-}
-
-.verify-btn:hover .arrow {
   transform: translateX(5px);
 }
 
+.arrow-icon {
+  width: 18px;
+  height: 18px;
+  transition: transform 0.3s ease;
+}
+
+.verify-btn:hover .arrow-icon {
+  transform: translateX(3px);
+}
+
+/* Responsive Design */
 @media (max-width: 768px) {
+  .certification-card {
+    flex-direction: column;
+    text-align: center;
+    padding: 1.5rem;
+  }
+
+  .cert-meta {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .certification-badge-wrapper {
+    width: 120px;
+    height: 120px;
+  }
+
+  .verify-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Animations */
+.slide-enter-active,
+.slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.slide-enter-from {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+.slide-leave-to {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.zoom-enter-active,
+.zoom-leave-active {
+  transition: all 0.4s ease;
+}
+
+.zoom-enter-from,
+.zoom-leave-to {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.staggered-list-enter-active {
+  animation: slide-in 0.4s ease;
+  animation-delay: var(--delay);
+}
+
+@keyframes slide-in {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes decorator-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .section-title {
+    font-size: 2rem;
+  }
+
   .tabs {
     flex-direction: column;
+  }
+
+  .tab-btn {
+    width: 100%;
   }
 
   .experience-card {
@@ -393,14 +583,5 @@ const certifications = [
   .certifications-grid {
     grid-template-columns: 1fr;
   }
-  
-  .certification-card {
-    padding: 1.5rem;
-  }
-  
-  .certification-badge {
-    width: 150px;
-    height: 150px;
-  }
 }
-</style> 
+</style>

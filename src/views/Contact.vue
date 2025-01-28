@@ -31,30 +31,30 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref } from 'vue';
 
 const formData = ref({
   name: '',
   email: '',
   message: ''
-})
+});
 
-const isSubmitting = ref(false)
-const submitStatus = ref(null)
+const isSubmitting = ref(false);
+const submitStatus = ref(null);
 
 const handleSubmit = async () => {
-  isSubmitting.value = true
+  isSubmitting.value = true;
   try {
-    // Add your form submission logic here
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    submitStatus.value = 'success'
-    formData.value = { name: '', email: '', message: '' }
+    // Simulate form submission
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    submitStatus.value = 'success';
+    formData.value = { name: '', email: '', message: '' };
   } catch (error) {
-    submitStatus.value = 'error'
+    submitStatus.value = 'error';
   } finally {
-    isSubmitting.value = false
+    isSubmitting.value = false;
   }
-}
+};
 </script>
 
 <style scoped>

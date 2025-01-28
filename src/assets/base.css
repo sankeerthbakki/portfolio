@@ -84,3 +84,13 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
+:root {
+  --primary-color: #3b82f6; /* Your brand color */
+  --text-color: #ffffff;
+  --border-radius-md: 8px;
+  --border-radius-lg: 12px;
+}
+* {
+  transition: background-color 0.2s ease;
+}
